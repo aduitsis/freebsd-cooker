@@ -37,10 +37,11 @@ This small project aims to provide a mechanism to fully automate the creation of
 ### Password Creation ###
 
 Setting up a password for the image involves the following steps:
-1.Run the (provided) mkpasswd.pl script.
-2.When prompted for a salt, enter a random string.
-3.When prompted for a password, enter the desired password.
-4.Copy the SHA-512 hash and paste it inside the password_hash file.
+
+1. Run the (provided) mkpasswd.pl script.
+2. When prompted for a salt, enter a random string.
+3. When prompted for a password, enter the desired password.
+4. Copy the SHA-512 hash and paste it inside the password_hash file.
 
 ### Workflow ###
 
