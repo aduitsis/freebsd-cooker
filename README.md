@@ -1,6 +1,6 @@
 # FreeBSD Cooker #
 
-Create FreeBSD VM images, ready to be imported by the most popular hypervisors. 
+Create FreeBSD VM images, ready to be imported by most popular hypervisors. 
  
 ### Overview ###
 
