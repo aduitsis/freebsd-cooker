@@ -53,6 +53,8 @@ Also, if you intend to build a ZFS VM, obviously your FreeBSD parent system will
 
 ### Password Creation ###
 
+**CAUTION: I highly recommend that you change the default password hash contained in the password_hash file and set your own.**
+
 Setting up a password for the image involves the following steps:
 
 1. Run the (provided) mkpasswd.pl script.
@@ -73,6 +75,9 @@ Setting up a password for the image involves the following steps:
 ### Acknowledgements ###
 I made heavy usage of the ZFS example contained in https://calomel.org/zfs_freebsd_root_install.html, so, many many thanks to these fine folks.
 
+### See Also ###
+* FreeBSD ZFS Root Install Script https://calomel.org/zfs_freebsd_root_install.html
+* mfsBSD http://mfsbsd.vx.sk/
 
 ### Author ###
 Athanasios Douitsis aduitsis@cpan.org
