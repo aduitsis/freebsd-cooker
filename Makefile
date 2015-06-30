@@ -69,6 +69,9 @@ kern_securelevel:
 sshd_enable:
 	echo sshd_enable="YES" >> /mnt/$(ZPOOL_DIR)etc/rc.conf
 
+set_password:
+	cat PASSWORD_HASH | chmod /mnt/$(ZPOOL_DIR) pw usermod root -H 0 
+
 
 
 common_settings: set_hostname ifconfig cmos timezone dumpdev kern_securelevel sshd_enable 
@@ -178,5 +181,6 @@ zfs_settings:
 zfs_umount:
 	# to unmount the filesystem before packaging
 	zpool export zroot
+	# if I wanted to reimport I'd zpool import -o altroot=/mnt [the numeric id] or zroot
 
 create: create_$(MODE) 
