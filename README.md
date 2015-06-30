@@ -20,6 +20,10 @@ This small project aims to provide a mechanism to fully automate the creation of
 
 ```
 
+When finished, there will be a target.ova file containing a FreeBSD VM 
+with the specified parameters. In most cases, this ova can be easily 
+imported into a hypervisor. 
+
 ### Supported Parameters ###
 
 * HOSTNAME: Will be inserted into target's rc.conf.
@@ -28,6 +32,7 @@ This small project aims to provide a mechanism to fully automate the creation of
 * SIZE_SWAP: Size of the swap partition inside the virtual disk. Default 1Gb.
 * BSD_VERSION: Version of FreeBSD that will be installed, default 10.1.
 * BSD_ARCH: Architecture of FreeBSD that will be installed, default amd64.
+* MIRROR: Mirror to use when downloading images.
 * TIMEZONE: Timezone that will be setup, default Europe/Athens. 
 * MEMORY: Size of RAM in Mbyes, default 512.
 * NCPUS: Number of virtual CPUs allocated, default 1.
