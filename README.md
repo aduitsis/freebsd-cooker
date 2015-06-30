@@ -24,6 +24,18 @@ When finished, there will be a target.ova file containing a FreeBSD VM
 with the specified parameters. In most cases, this ova can be easily 
 imported into a hypervisor. 
 
+### Installation ###
+
+Just clone this repo somewhere in a FreeBSD system you have enough disk space, issue make like in the examples above. Also, you will need vmdktool, which is in the ports collection under sysutils. The simplest way to install it would be:
+
+```
+#!shell
+
+pkg install vmdktool
+```
+Also, if you intend to build a ZFS VM, obviously your FreeBSD parent system will have to be able to support ZFS. So I would really recommend a FreeBSD 10.x to get all the features and stability of that release.
+
+
 ### Supported Parameters ###
 
 * HOSTNAME: Will be inserted into target's rc.conf.
