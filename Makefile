@@ -11,7 +11,8 @@ SIZE_SWAP=1
 SIZE_UFS!= expr $(SIZE_GB) - $(SIZE_SWAP) 
 NET_NAME=native_network
 MEMORY=512
-NCUPS=1
+NCPUS=1
+PASSWORD_HASH=password_hash
 
 #these should probably remain as-is
 RAW_IMAGE=FreeBSD-$(BSD_VERSION)-RELEASE-$(BSD_ARCH).raw
@@ -70,7 +71,7 @@ sshd_enable:
 	echo sshd_enable="YES" >> /mnt/$(ZPOOL_DIR)etc/rc.conf
 
 set_password:
-	cat PASSWORD_HASH | chmod /mnt/$(ZPOOL_DIR) pw usermod root -H 0 
+	cat $(PASSWORD_HASH) | chmod /mnt/$(ZPOOL_DIR) pw usermod root -H 0 
 
 
 
@@ -184,3 +185,5 @@ zfs_umount:
 	# if I wanted to reimport I'd zpool import -o altroot=/mnt [the numeric id] or zroot
 
 create: create_$(MODE) 
+
+all: create vmdk ova
