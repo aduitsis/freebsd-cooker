@@ -128,7 +128,7 @@ ufs_umount:
 	- umount /mnt
 	
 entropy:
-	bsdinstall entropy
+	env BSDINSTALL_CHROOT=/mnt/$(ZPOOL_DIR) bsdinstall entropy
 
 distfetch:
 	mkdir -p distdir
