@@ -80,7 +80,9 @@ I made heavy usage of the ZFS example contained in https://calomel.org/zfs_freeb
 * mfsBSD http://mfsbsd.vx.sk/
 
 ### Author ###
-Athanasios Douitsis aduitsis@cpan.org
+Athanasios Douitsis 
+
+[aduitsis@cpan.org](mailto:aduitsis@cpan.org)
 
 ### License ###
-Although there is hardly anything original inside this simple Makefile, everything is release under the same license as FreeBSD itself. In other words, do as you please with it. However, use it at your own risk, there is no liability involved whatsoever.
+Although there is hardly anything original inside this simple Makefile, everything is released under the same license as FreeBSD itself (i.e. BSD license). In other words, do as you please with it. However, use it at your own risk, there is no liability involved whatsoever.
