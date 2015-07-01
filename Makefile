@@ -1,10 +1,11 @@
 #obviously one can and should override these defaults
 HOSTNAME=target.mydomain
-IP=1.2.3.4/24
+IP=DHCP
+### example: IP=1.2.3.4/24
 BSD_VERSION=10.1
 BSD_ARCH=amd64
 TIMEZONE=Europe/Athens
-DISTRIBUTIONS=src.txz kernel.txz base.txz lib32.txz doc.txz
+DISTRIBUTIONS=src.txz kernel.txz base.txz lib32.txz 
 MIRROR=ftp.gr.freebsd.org
 SIZE_GB=3
 SIZE_SWAP=1
@@ -20,6 +21,13 @@ RAW_IMAGE_COMPRESSED=$(RAW_IMAGE).xz
 MD_NUMBER=98
 ZROOT=zroot
 
+.if ! $(IP) == "DHCP"
+IP_RC=inet $(IP)
+.else
+IP_RC=$(IP)
+.endif
+
+
 #do not touch
 MODE=ufs
 ZPOOL_DIR=
@@ -30,21 +38,8 @@ ZPOOL_DIR=$(ZROOT)/
 
 
 
-default:
-	echo $(DISTRIBUTIONS) $(SIZE_UFS) $(ZPOOL_DIR) $(MODE) 
-
-download-image:
-	fetch ftp://$(MIRROR)/pub/FreeBSD/releases/VM-IMAGES/$(BSD_VERSION)-RELEASE/$(BSD_ARCH)/Latest/$(RAW_IMAGE_COMPRESSED)
-
-uncompress-image:
-	xz -d $(RAW_IMAGE_COMPRESSED)
-
-mount-image:
-	mdconfig -f $(RAW_IMAGE) -u$(MD_NUMBER)
-	mount /dev/md$(MD_NUMBER)p3 /mnt
-
-#################################################################################
-
+show:
+	@echo distributions=$(DISTRIBUTIONS) size_ufs=$(SIZE_UFS) zpool_dir=$(ZPOOL_DIR) mode=$(MODE) ip=$(IP_RC)
 
 #################################################################################
 
@@ -52,7 +47,7 @@ set_hostname:
 	echo hostname=\"$(HOSTNAME)\" > /mnt/$(ZPOOL_DIR)etc/rc.conf
 
 ifconfig:
-	echo ifconfig_em0=\"inet $(IP)\" >> /mnt/$(ZPOOL_DIR)etc/rc.conf
+	echo ifconfig_em0=\"$(IP_RC)\" >> /mnt/$(ZPOOL_DIR)etc/rc.conf
 
 cmos:
 	touch /mnt/$(ZPOOL_DIR)etc/wall_cmos_clock
@@ -132,13 +127,13 @@ entropy:
 
 distfetch:
 	mkdir -p distdir
-	env DISTRIBUTIONS="$(DISTRIBUTIONS)" BSDINSTALL_DISTDIR=`pwd`/distdir BSDINSTALL_DISTSITE=ftp://$(MIRROR)/pub/FreeBSD/releases/amd64/10.1-RELEASE bsdinstall distfetch
+	env DISTRIBUTIONS="$(DISTRIBUTIONS)" BSDINSTALL_DISTDIR=`pwd`/distdir BSDINSTALL_DISTSITE=ftp://$(MIRROR)/pub/FreeBSD/releases/$(BSD_ARCH)/$(BSD_VERSION)-RELEASE bsdinstall distfetch
 
 distextract:
-	env BSDINSTALL_CHROOT=/mnt/$(ZPOOL_DIR) DISTRIBUTIONS="$(DISTRIBUTIONS)" BSDINSTALL_DISTDIR=`pwd`/distdir BSDINSTALL_DISTSITE=ftp://$(MIRROR)/pub/FreeBSD/releases/amd64/10.1-RELEASE bsdinstall distextract
+	env BSDINSTALL_CHROOT=/mnt/$(ZPOOL_DIR) DISTRIBUTIONS="$(DISTRIBUTIONS)" BSDINSTALL_DISTDIR=`pwd`/distdir BSDINSTALL_DISTSITE=ftp://$(MIRROR)/pub/FreeBSD/releases/$(BSD_ARCH)/$(BSD_VERSION)-RELEASE bsdinstall distextract
 
 bsdinstall_config:
-	env BSDINSTALL_CHROOT=/mnt/$(ZPOOL_DIR) DISTRIBUTIONS="$(DISTRIBUTIONS)" BSDINSTALL_DISTDIR=`pwd`/distdir BSDINSTALL_DISTSITE=ftp://$(MIRROR)/pub/FreeBSD/releases/amd64/10.1-RELEASE bsdinstall config
+	env BSDINSTALL_CHROOT=/mnt/$(ZPOOL_DIR) DISTRIBUTIONS="$(DISTRIBUTIONS)" BSDINSTALL_DISTDIR=`pwd`/distdir BSDINSTALL_DISTSITE=ftp://$(MIRROR)/pub/FreeBSD/releases/$(BSD_ARCH)/$(BSD_VERSION)-RELEASE bsdinstall config
 
 ufs_fstab:
 	cp fstab.template /mnt/etc/fstab
@@ -187,3 +182,18 @@ zfs_umount:
 create: create_$(MODE) 
 
 all: create vmdk ova
+
+
+###########################################################
+# the below section is no longer actively used, kept here 
+# lest it is used in the future
+# #########################################################
+download-image:
+	fetch ftp://$(MIRROR)/pub/FreeBSD/releases/VM-IMAGES/$(BSD_VERSION)-RELEASE/$(BSD_ARCH)/Latest/$(RAW_IMAGE_COMPRESSED)
+
+uncompress-image:
+	xz -d $(RAW_IMAGE_COMPRESSED)
+
+mount-image:
+	mdconfig -f $(RAW_IMAGE) -u$(MD_NUMBER)
+	mount /dev/md$(MD_NUMBER)p3 /mnt
