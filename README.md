@@ -1,6 +1,6 @@
 # FreeBSD Cooker #
 
-Create FreeBSD VM images, ready to be imported by the most popular hypervisors. 
+Create FreeBSD VM images, ready to be imported by most popular hypervisors. 
  
 ### Overview ###
 
@@ -24,6 +24,18 @@ When finished, there will be a target.ova file containing a FreeBSD VM
 with the specified parameters. In most cases, this ova can be easily 
 imported into a hypervisor. 
 
+### Installation ###
+
+Just clone this repo somewhere in a FreeBSD system you have enough disk space, issue make like in the examples above. Also, you will need vmdktool, which is in the ports collection under sysutils. The simplest way to install it would be:
+
+```
+#!shell
+
+pkg install vmdktool
+```
+Also, if you intend to build a ZFS VM, obviously your FreeBSD parent system will have to be able to support ZFS. So I would really recommend a FreeBSD 10.x to get all the features and stability of that release.
+
+
 ### Supported Parameters ###
 
 * HOSTNAME: Will be inserted into target's rc.conf.
@@ -40,6 +52,8 @@ imported into a hypervisor.
 * ZFS: If set to any non-empty value (e.g. ZFS=1), the virtual disk will be paritioned and made bootable using a ZFS-based scheme. The default is to create a traditional UFS scheme.
 
 ### Password Creation ###
+
+**CAUTION: I highly recommend that you change the default password hash contained in the password_hash file and set your own.**
 
 Setting up a password for the image involves the following steps:
 
@@ -61,9 +75,14 @@ Setting up a password for the image involves the following steps:
 ### Acknowledgements ###
 I made heavy usage of the ZFS example contained in https://calomel.org/zfs_freebsd_root_install.html, so, many many thanks to these fine folks.
 
+### See Also ###
+* FreeBSD ZFS Root Install Script https://calomel.org/zfs_freebsd_root_install.html
+* mfsBSD http://mfsbsd.vx.sk/
 
 ### Author ###
-Athanasios Douitsis aduitsis@cpan.org
+Athanasios Douitsis 
+
+[aduitsis@cpan.org](mailto:aduitsis@cpan.org)
 
 ### License ###
-Although there is hardly anything original inside this simple Makefile, everything is release under the same license as FreeBSD itself. In other words, do as you please with it. However, use it at your own risk, there is no liability involved whatsoever.
+Although there is hardly anything original inside this simple Makefile, everything is released under the same license as FreeBSD itself (i.e. BSD license). In other words, do as you please with it. However, use it at your own risk, there is no liability involved whatsoever.
