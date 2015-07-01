@@ -3,10 +3,15 @@
 use warnings;
 use strict;
 
-print STDERR "Please enter salt (no \$'s, just a random string): ";
-my $salt = '$6$'.<STDIN>;
+open( my $cmd, '-|' , 'openssl rand 16 -hex' ) or die 'cannot invoke openssl command';
 
-print STDERR "Now please enter a password: ";
+my $salt = <$cmd>;
+
+chomp $salt;
+
+$salt = '$6$'.$salt;
+
+print STDERR "Please enter a password: ";
 my $password = <STDIN>;
 
 print crypt($password,$salt)."\n";
