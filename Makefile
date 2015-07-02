@@ -1,6 +1,7 @@
 #obviously one can and should override these defaults
 HOSTNAME=target.mydomain
 IP=DHCP
+IPV6="inet6 accept_rtadv"
 ### example: IP=1.2.3.4/24
 BSD_VERSION=10.1
 BSD_ARCH=amd64
@@ -14,18 +15,15 @@ NET_NAME=native_network
 MEMORY=512
 NCPUS=1
 PASSWORD_HASH=password_hash
+NAMESERVER="8.8.8.8"
+NAMESERVER+="8.8.4.4"
+PKGNG=vim-lite 
 
 #these should probably remain as-is
 RAW_IMAGE=FreeBSD-$(BSD_VERSION)-RELEASE-$(BSD_ARCH).raw
 RAW_IMAGE_COMPRESSED=$(RAW_IMAGE).xz
 MD_NUMBER=98
 ZROOT=zroot
-
-.if ! $(IP) == "DHCP"
-IP_RC=inet $(IP)
-.else
-IP_RC=$(IP)
-.endif
 
 
 #do not touch
@@ -37,40 +35,75 @@ ZPOOL_DIR=$(ZROOT)/
 .endif
 
 
-
 show:
-	@echo distributions=$(DISTRIBUTIONS) size_ufs=$(SIZE_UFS) zpool_dir=$(ZPOOL_DIR) mode=$(MODE) ip=$(IP_RC)
+	@echo distributions=$(DISTRIBUTIONS) size_ufs=$(SIZE_UFS) zpool_dir=$(ZPOOL_DIR) mode=$(MODE) ip=$(IP_RC) common_settings=$(COMMON_SETTINGS) ns=$(NAMESERVER)
 
 #################################################################################
 
+COMMON_SETTINGS+=set_hostname
 set_hostname:
 	echo hostname=\"$(HOSTNAME)\" > /mnt/$(ZPOOL_DIR)etc/rc.conf
 
+.if ! $(IP) == "DHCP"
+IP_RC=inet $(IP)
+.else
+IP_RC=$(IP)
+.endif
+COMMON_SETTINGS+=ifconfig
 ifconfig:
 	echo ifconfig_em0=\"$(IP_RC)\" >> /mnt/$(ZPOOL_DIR)etc/rc.conf
 
+.if $(IPV6) != "" 
+COMMON_SETTINGS+=ipv6
+.endif
+ipv6:
+	echo ifconfig_em0_ipv6=\"$(IPV6)\" >> /mnt/$(ZPOOL_DIR)etc/rc.conf
+
+.if (defined(DEFAULTROUTER))
+COMMON_SETTINGS+=defaultrouter
+.endif
+defaultrouter:
+	echo defaultrouter=\"$(DEFAULTROUTER)\" >> /mnt/$(ZPOOL_DIR)etc/rc.conf
+
+COMMON_SETTINGS+=cmos
 cmos:
 	touch /mnt/$(ZPOOL_DIR)etc/wall_cmos_clock
 
+COMMON_SETTINGS+=timezone
 timezone:
 	cp /mnt/$(ZPOOL_DIR)usr/share/zoneinfo/$(TIMEZONE) /mnt/$(ZPOOL_DIR)etc/localtime
 
+COMMON_SETTINGS+=dumpdev
 dumpdev:
 	echo dumpdev="AUTO" >> /mnt/$(ZPOOL_DIR)etc/rc.conf
 
+COMMON_SETTINGS+=kern_securelevel
 kern_securelevel:
 	echo kern_securelevel_enable="NO" >> /mnt/$(ZPOOL_DIR)etc/rc.conf
 	echo kern_securelevel="1" >> /mnt/$(ZPOOL_DIR)etc/rc.conf
 
+COMMON_SETTINGS+=sshd_enable
 sshd_enable:
 	echo sshd_enable="YES" >> /mnt/$(ZPOOL_DIR)etc/rc.conf
 
+COMMON_SETTINGS+=set_password
 set_password:
-	cat $(PASSWORD_HASH) | chmod /mnt/$(ZPOOL_DIR) pw usermod root -H 0 
+	cat $(PASSWORD_HASH) | chroot /mnt/$(ZPOOL_DIR) pw usermod root -H 0 
 
+.if $(NAMESERVER) != ""
+COMMON_SETTINGS+=set_resolv_conf
+.endif
+set_resolv_conf:
+	for i in $(NAMESERVER); do echo nameserver $$i >> /mnt/$(ZPOOL_DIR)etc/resolv.conf ; done
 
+.if $(PKGNG) != ""
+COMMON_SETTINGS+=pkgng
+.endif
+pkgng:
+	env ASSUME_ALWAYS_YES=true chroot /mnt/$(ZPOOL_DIR) pkg bootstrap
+	env ASSUME_ALWAYS_YES=true chroot /mnt/$(ZPOOL_DIR) pkg install $(PKGNG) 
 
-common_settings: set_hostname ifconfig cmos timezone dumpdev kern_securelevel sshd_enable 
+common_settings: $(COMMON_SETTINGS)
 
 #################################################################################
 

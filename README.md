@@ -4,7 +4,7 @@ Create FreeBSD VM images, ready to be imported by most popular hypervisors.
  
 ### Overview ###
 
-This small project aims to provide a mechanism to fully automate the creation of FreeBSD images, up to the point of providing an Open Virtulization Format image of a FreeBSD installation. All the functionality for this is embedded in a simple Makefile. 
+This small project aims to provide a mechanism to fully automate the creation of FreeBSD images, up to the point of providing an Open Virtulization Format image of a FreeBSD installation. All the functionality for this is embedded in a simple Makefile. At present, it can create either UFS or ZFS based installations, setup many common settings (e.g. insert values into rc.conf) and bootstrap pkgng in the newly created VM. 
 
 ### Synopsis ###
 
@@ -40,6 +40,9 @@ Also, if you intend to build a ZFS VM, obviously your FreeBSD parent system will
 
 * HOSTNAME: Will be inserted into target's rc.conf.
 * IP: In CIDR notation, will be inserted into target's rc.conf.
+* DEFAULTROUTER: A default gateway, usually just an IP. Defaults to undefined, which means that unless defined explicitly, it won't be setup in rc.conf.
+* IPV6: ifconfig_em0_ipv6 to be inserted into rc.conf, sets up IPv6. Defaults to "inet6 accept_rtadv". To disable, set it to empty, like IPV6="" or something similar.
+* NAMESERVER: Set nameserver value(s). I have set a default of 8.8.8.8 and 8.8.4.4, **but you really should set your own values**. Multiple values can be set with e.g. NAMESERVER=1.1.1.1 NAMESERVER+=2.2.2.2, etc. To disable, set to empty, like NAMESERVER="".
 * SIZE_GB: Size of the entire virtual disk image that will be created.
 * SIZE_SWAP: Size of the swap partition inside the virtual disk. Default 1Gb.
 * BSD_VERSION: Version of FreeBSD that will be installed, default 10.1.
@@ -50,6 +53,7 @@ Also, if you intend to build a ZFS VM, obviously your FreeBSD parent system will
 * NCPUS: Number of virtual CPUs allocated, default 1.
 * PASSWORD_HASH: File containing the password hash of the root password of the image. Default password_hash, see below how to create it. 
 * ZFS: If set to any non-empty value (e.g. ZFS=1), the virtual disk will be paritioned and made bootable using a ZFS-based scheme. The default is to create a traditional UFS scheme.
+* PKGNG: This is a list of package name that will be installed. Just to get things going, I have set a default value of vim-lite, so that the popular editor will be preinstalled in the image. To add more values, PKGNG+=whatever_you_like. When this list is not empty, the Makefile will bootstrap pkgng before doing anything else. To disable everything, set PKGNG to empty, like PKGNG=""
 
 ### Password Creation ###
 
