@@ -84,6 +84,7 @@ I made heavy usage of the ZFS example contained in https://calomel.org/zfs_freeb
 ### See Also ###
 * FreeBSD ZFS Root Install Script https://calomel.org/zfs_freebsd_root_install.html
 * mfsBSD http://mfsbsd.vx.sk/
+* https://github.com/tacahilo/packer-FreeBSD-10.0
 
 ### Author ###
 Athanasios Douitsis 
