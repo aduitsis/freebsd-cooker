@@ -10,14 +10,11 @@ Create FreeBSD VM images, ready to be imported by a hypervisor. The mechanism ca
 ### Synopsis ###
 
 ```
-#!shell
-
  #create a UFS Image
  make all 
 
  #create a ZFS image, 10Gb virtual disk, 1Gb RAM
  make all ZFS=1 HOSTNAME=foo.bar IP=3.4.5.6/24 SIZE_GB=10 MEMORY=1024
-
 
 ```
 
@@ -30,8 +27,6 @@ imported into a hypervisor.
 Just clone this repo somewhere in a FreeBSD system you have enough disk space, issue make like in the examples above. Also, you will need vmdktool, which is in the ports collection under sysutils. The simplest way to install it would be:
 
 ```
-#!shell
-
 pkg install vmdktool
 ```
 Also, if you intend to build a ZFS VM, obviously your FreeBSD parent system will have to be able to support ZFS. So I would really recommend a FreeBSD 10.x to get all the features and stability of that release.
