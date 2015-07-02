@@ -18,6 +18,8 @@ PASSWORD_HASH=password_hash
 NAMESERVER="8.8.8.8"
 NAMESERVER+="8.8.4.4"
 PKGNG=vim-lite 
+PKGNG+=puppet
+PUPPET=init.pp
 
 #these should probably remain as-is
 RAW_IMAGE=FreeBSD-$(BSD_VERSION)-RELEASE-$(BSD_ARCH).raw
@@ -102,6 +104,14 @@ COMMON_SETTINGS+=pkgng
 pkgng:
 	env ASSUME_ALWAYS_YES=true chroot /mnt/$(ZPOOL_DIR) pkg bootstrap
 	env ASSUME_ALWAYS_YES=true chroot /mnt/$(ZPOOL_DIR) pkg install $(PKGNG) 
+
+.if $(PUPPET) != ""
+COMMON_SETTINGS+=puppet
+.endif
+puppet:
+	mkdir -p /mnt/$(ZPOOL_DIR)root/freebsd-cooker/
+	cp $(PUPPET) /mnt/$(ZPOOL_DIR)root/freebsd-cooker/
+	for i in $(PUPPET); do chroot /mnt/$(ZPOOL_DIR) puppet apply /root/freebsd-cooker/$$i ; done
 
 common_settings: $(COMMON_SETTINGS)
 

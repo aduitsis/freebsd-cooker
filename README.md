@@ -1,10 +1,12 @@
 # FreeBSD Cooker #
 
+*Scotty, I need a FreeBSD in three minutes, or we're all dead*
+
 Create FreeBSD VM images, ready to be imported by most popular hypervisors. 
  
 ### Overview ###
 
-This small project aims to provide a mechanism to fully automate the creation of FreeBSD images, up to the point of providing an Open Virtulization Format image of a FreeBSD installation. All the functionality for this is embedded in a simple Makefile. At present, it can create either UFS or ZFS based installations, setup many common settings (e.g. insert values into rc.conf) and bootstrap pkgng in the newly created VM. 
+This small project aims to provide a mechanism to fully automate the creation of FreeBSD images, up to the point of providing an Open Virtulization Format image of a FreeBSD installation. All the functionality for this is embedded in a simple Makefile. At present, it can create either UFS or ZFS based installations, setup many common settings (e.g. insert values into rc.conf), bootstrap pkgng in the newly created VM and run puppet manifests in it. 
 
 ### Synopsis ###
 
@@ -49,11 +51,12 @@ Also, if you intend to build a ZFS VM, obviously your FreeBSD parent system will
 * BSD_ARCH: Architecture of FreeBSD that will be installed, default amd64.
 * MIRROR: Mirror to use when downloading images.
 * TIMEZONE: Timezone that will be setup, default Europe/Athens. 
-* MEMORY: Size of RAM in Mbyes, default 512.
+* MEMORY: Size of RAM in Mbytes, default 512.
 * NCPUS: Number of virtual CPUs allocated, default 1.
 * PASSWORD_HASH: File containing the password hash of the root password of the image. Default password_hash, see below how to create it. 
 * ZFS: If set to any non-empty value (e.g. ZFS=1), the virtual disk will be paritioned and made bootable using a ZFS-based scheme. The default is to create a traditional UFS scheme.
 * PKGNG: This is a list of package name that will be installed. Just to get things going, I have set a default value of vim-lite, so that the popular editor will be preinstalled in the image. To add more values, PKGNG+=whatever_you_like. When this list is not empty, the Makefile will bootstrap pkgng before doing anything else. To disable everything, set PKGNG to empty, like PKGNG=""
+* PUPPET: If non-empty, this variable represents one or more filenames of puppet manifests that will be transfered to the VM and be applied there. To deactivate, set it to empty, like PUPPET="". To add more manifests, try something like PUPPET+=foo.pp, etc. **Remember that the puppet apply command runs in the host system by chrooting into the VM target directory. Please do not try to use any Puppet Facts that may not be available, e.g. ip_address.**  *Note, the puppet command may emit warnings about not being able to initialize the ZFS library, this error doesn't appear to cause any serious problem*
 
 ### Password Creation ###
 
