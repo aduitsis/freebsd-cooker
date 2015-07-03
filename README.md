@@ -59,9 +59,8 @@ Also, if you intend to build a ZFS VM, obviously your FreeBSD parent system will
 Setting up a password for the image involves the following steps:
 
 1. Run the (provided) mkpasswd.pl script.
-2. When prompted for a salt, enter a random string.
-3. When prompted for a password, enter the desired password.
-4. Copy the SHA-512 hash and paste it inside the password_hash file.
+2. When prompted for a password, enter the desired password.
+3. Copy the SHA-512 hash and paste it inside the password_hash file. (Or redirect the output of mkpassword to the hash file directly) *I could make the script not echo the password characters with Term::ReadKey or something similar, but for the time being I'd like to keep the dependencies minimal. Conditional load of Term::ReadKey coming up.*
 
 ### Workflow ###
 
