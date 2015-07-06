@@ -27,6 +27,8 @@ RAW_IMAGE=FreeBSD-$(BSD_VERSION)-RELEASE-$(BSD_ARCH).raw
 RAW_IMAGE_COMPRESSED=$(RAW_IMAGE).xz
 MD_NUMBER=98
 ZROOT=zroot
+DISTDIR=distdir-$(BSD_VERSION)-$(BSD_ARCH)
+DISTSITE=ftp://$(MIRROR)/pub/FreeBSD/releases/$(BSD_ARCH)/$(BSD_VERSION)-RELEASE
 
 
 #do not touch
@@ -36,6 +38,8 @@ ZPOOL_DIR=
 MODE=zfs
 ZPOOL_DIR=$(ZROOT)/
 .endif
+
+
 
 
 show:
@@ -136,10 +140,10 @@ ova:
 #################################################################################
 
 clean:
-	- rm `pwd`/distdir/src.txz
-	- rm `pwd`/distdir/base.txz
-	- rm `pwd`/distdir/lib32.txz
-	- rm `pwd`/distdir/doc.txz
+	- rm `pwd`/$(DISTDIR)/src.txz
+	- rm `pwd`/$(DISTDIR)/base.txz
+	- rm `pwd`/$(DISTDIR)/lib32.txz
+	- rm `pwd`/$(DISTDIR)/doc.txz
 	- rm target.disk
 	- rm target.ova
 	- rm target.ovf
@@ -169,15 +173,21 @@ ufs_umount:
 entropy:
 	env BSDINSTALL_CHROOT=/mnt/$(ZPOOL_DIR) bsdinstall entropy
 
-distfetch:
-	mkdir -p distdir
-	env DISTRIBUTIONS="$(DISTRIBUTIONS)" BSDINSTALL_DISTDIR=`pwd`/distdir BSDINSTALL_DISTSITE=ftp://$(MIRROR)/pub/FreeBSD/releases/$(BSD_ARCH)/$(BSD_VERSION)-RELEASE bsdinstall distfetch
+distfetch-bsdinstall:
+	mkdir -p $(DISTDIR)
+	env DISTRIBUTIONS="$(DISTRIBUTIONS)" BSDINSTALL_DISTDIR=`pwd`/$(DISTDIR) BSDINSTALL_DISTSITE=ftp://$(MIRROR)/pub/FreeBSD/releases/$(BSD_ARCH)/$(BSD_VERSION)-RELEASE bsdinstall distfetch
+
+distfetch-manual: 
+	cd $(DISTDIR) ; for i in $(DISTRIBUTIONS); do fetch -m $(DISTSITE)/$$i ; done
+
+DISTFETCH_METHOD=manual
+distfetch: distfetch-$(DISTFETCH_METHOD) 
 
 distextract:
-	env BSDINSTALL_CHROOT=/mnt/$(ZPOOL_DIR) DISTRIBUTIONS="$(DISTRIBUTIONS)" BSDINSTALL_DISTDIR=`pwd`/distdir BSDINSTALL_DISTSITE=ftp://$(MIRROR)/pub/FreeBSD/releases/$(BSD_ARCH)/$(BSD_VERSION)-RELEASE bsdinstall distextract
+	env BSDINSTALL_CHROOT=/mnt/$(ZPOOL_DIR) DISTRIBUTIONS="$(DISTRIBUTIONS)" BSDINSTALL_DISTDIR=`pwd`/$(DISTDIR) BSDINSTALL_DISTSITE=ftp://$(MIRROR)/pub/FreeBSD/releases/$(BSD_ARCH)/$(BSD_VERSION)-RELEASE bsdinstall distextract
 
 bsdinstall_config:
-	env BSDINSTALL_CHROOT=/mnt/$(ZPOOL_DIR) DISTRIBUTIONS="$(DISTRIBUTIONS)" BSDINSTALL_DISTDIR=`pwd`/distdir BSDINSTALL_DISTSITE=ftp://$(MIRROR)/pub/FreeBSD/releases/$(BSD_ARCH)/$(BSD_VERSION)-RELEASE bsdinstall config
+	env BSDINSTALL_CHROOT=/mnt/$(ZPOOL_DIR) DISTRIBUTIONS="$(DISTRIBUTIONS)" BSDINSTALL_DISTDIR=`pwd`/$(DISTDIR) BSDINSTALL_DISTSITE=ftp://$(MIRROR)/pub/FreeBSD/releases/$(BSD_ARCH)/$(BSD_VERSION)-RELEASE bsdinstall config
 
 ufs_fstab:
 	cp fstab.template /mnt/etc/fstab
