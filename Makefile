@@ -40,6 +40,9 @@ ZPOOL_DIR=$(ZROOT)/
 .endif
 
 
+#handle errors
+ERROR_TARGET=$(MODE)_umount delete_metadevice
+.ERROR: $(ERROR_TARGET)
 
 
 show:
@@ -106,9 +109,15 @@ set_resolv_conf:
 .if $(PKGNG) != ""
 COMMON_SETTINGS+=pkgng
 .endif
-pkgng:
+pkgng: pkgng_bootstrap pkgng_install
+
+pkgng_bootstrap:
 	env ASSUME_ALWAYS_YES=true chroot /mnt/$(ZPOOL_DIR) pkg bootstrap
-	env ASSUME_ALWAYS_YES=true chroot /mnt/$(ZPOOL_DIR) pkg install $(PKGNG) 
+	@sleep 5
+
+pkgng_install:
+	### Incredible, for some stupid reason the NAMESERVER variable seems to make pkg freak out
+	- env NAMESERVER= ASSUME_ALWAYS_YES=true chroot /mnt/$(ZPOOL_DIR) pkg install $(PKGNG) 
 
 .if $(PUPPET) != ""
 COMMON_SETTINGS+=puppet
