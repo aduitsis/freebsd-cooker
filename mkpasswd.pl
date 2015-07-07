@@ -13,5 +13,6 @@ $salt = '$6$'.$salt;
 
 print STDERR "Please enter a password: ";
 my $password = <STDIN>;
+chomp $password;
 
 print crypt($password,$salt)."\n";

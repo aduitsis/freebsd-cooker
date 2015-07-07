@@ -47,6 +47,8 @@ ERROR_TARGET=$(MODE)_umount delete_metadevice
 
 show:
 	@echo distributions=$(DISTRIBUTIONS) size_ufs=$(SIZE_UFS) zpool_dir=$(ZPOOL_DIR) mode=$(MODE) ip=$(IP_RC) common_settings=$(COMMON_SETTINGS) ns=$(NAMESERVER)
+	@echo environment follows:
+	@env | sort 
 
 #################################################################################
 
@@ -106,18 +108,22 @@ COMMON_SETTINGS+=set_resolv_conf
 set_resolv_conf:
 	for i in $(NAMESERVER); do echo nameserver $$i >> /mnt/$(ZPOOL_DIR)etc/resolv.conf ; done
 
+
 .if $(PKGNG) != ""
 COMMON_SETTINGS+=pkgng
 .endif
+ASSUME_ALWAYS_YES=true
+.export ASSUME_ALWAYS_YES
+
 pkgng: pkgng_bootstrap pkgng_install
 
 pkgng_bootstrap:
-	env ASSUME_ALWAYS_YES=true chroot /mnt/$(ZPOOL_DIR) pkg bootstrap
+	env NAMESERVER= chroot /mnt/$(ZPOOL_DIR) pkg bootstrap
 	@sleep 5
 
 pkgng_install:
 	### Incredible, for some stupid reason the NAMESERVER variable seems to make pkg freak out
-	- env NAMESERVER= ASSUME_ALWAYS_YES=true chroot /mnt/$(ZPOOL_DIR) pkg install $(PKGNG) 
+	env NAMESERVER= chroot /mnt/$(ZPOOL_DIR) pkg install $(PKGNG) 
 
 .if $(PUPPET) != ""
 COMMON_SETTINGS+=puppet
@@ -182,9 +188,10 @@ ufs_umount:
 entropy:
 	env BSDINSTALL_CHROOT=/mnt/$(ZPOOL_DIR) bsdinstall entropy
 
+.export DISTRIBUTIONS
 distfetch-bsdinstall:
 	mkdir -p $(DISTDIR)
-	env DISTRIBUTIONS="$(DISTRIBUTIONS)" BSDINSTALL_DISTDIR=`pwd`/$(DISTDIR) BSDINSTALL_DISTSITE=ftp://$(MIRROR)/pub/FreeBSD/releases/$(BSD_ARCH)/$(BSD_VERSION)-RELEASE bsdinstall distfetch
+	env BSDINSTALL_DISTDIR=`pwd`/$(DISTDIR) BSDINSTALL_DISTSITE=ftp://$(MIRROR)/pub/FreeBSD/releases/$(BSD_ARCH)/$(BSD_VERSION)-RELEASE bsdinstall distfetch
 
 distfetch-manual: 
 	cd $(DISTDIR) ; for i in $(DISTRIBUTIONS); do fetch -m $(DISTSITE)/$$i ; done
@@ -193,10 +200,10 @@ DISTFETCH_METHOD=manual
 distfetch: distfetch-$(DISTFETCH_METHOD) 
 
 distextract:
-	env BSDINSTALL_CHROOT=/mnt/$(ZPOOL_DIR) DISTRIBUTIONS="$(DISTRIBUTIONS)" BSDINSTALL_DISTDIR=`pwd`/$(DISTDIR) BSDINSTALL_DISTSITE=ftp://$(MIRROR)/pub/FreeBSD/releases/$(BSD_ARCH)/$(BSD_VERSION)-RELEASE bsdinstall distextract
+	env BSDINSTALL_CHROOT=/mnt/$(ZPOOL_DIR) BSDINSTALL_DISTDIR=`pwd`/$(DISTDIR) BSDINSTALL_DISTSITE=ftp://$(MIRROR)/pub/FreeBSD/releases/$(BSD_ARCH)/$(BSD_VERSION)-RELEASE bsdinstall distextract
 
 bsdinstall_config:
-	env BSDINSTALL_CHROOT=/mnt/$(ZPOOL_DIR) DISTRIBUTIONS="$(DISTRIBUTIONS)" BSDINSTALL_DISTDIR=`pwd`/$(DISTDIR) BSDINSTALL_DISTSITE=ftp://$(MIRROR)/pub/FreeBSD/releases/$(BSD_ARCH)/$(BSD_VERSION)-RELEASE bsdinstall config
+	env BSDINSTALL_CHROOT=/mnt/$(ZPOOL_DIR) BSDINSTALL_DISTDIR=`pwd`/$(DISTDIR) BSDINSTALL_DISTSITE=ftp://$(MIRROR)/pub/FreeBSD/releases/$(BSD_ARCH)/$(BSD_VERSION)-RELEASE bsdinstall config
 
 ufs_fstab:
 	cp fstab.template /mnt/etc/fstab
@@ -235,6 +242,7 @@ zfs_settings:
 	echo 'kern.geom.label.disk_ident.enable="0"' >> /mnt/$(ZPOOL_DIR)/boot/loader.conf
 	echo 'kern.geom.label.gpt.enable="1"' >> /mnt/$(ZPOOL_DIR)/boot/loader.conf
 	echo 'kern.geom.label.gptid.enable="0"' >> /mnt/$(ZPOOL_DIR)/boot/loader.conf
+	rm /mnt/$(ZPOOL_DIR)/etc/fstab
 	touch /mnt/$(ZPOOL_DIR)/etc/fstab
 
 zfs_umount:
