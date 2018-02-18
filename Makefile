@@ -1,26 +1,26 @@
 #obviously one can and should override these defaults
-HOSTNAME=target.mydomain
-IP=DHCP
-IPV6="inet6 accept_rtadv"
+HOSTNAME=	target.mydomain
+IP=		DHCP
+IPV6=		inet6 accept_rtadv
 ### example: IP=1.2.3.4/24
-BSD_VERSION=10.1
-BSD_ARCH=amd64
-TIMEZONE=Europe/Athens
+BSD_VERSION=	11.1
+BSD_ARCH=	amd64
+TIMEZONE=	Europe/Athens
 #DISTRIBUTIONS=src.txz kernel.txz base.txz lib32.txz 
-DISTRIBUTIONS=kernel.txz base.txz
-MIRROR=ftp.gr.freebsd.org
-SIZE_GB=3
-SIZE_SWAP=1
-SIZE_UFS!= expr $(SIZE_GB) - $(SIZE_SWAP) 
-NET_NAME=native_network
-MEMORY=512
-NCPUS=1
-PASSWORD_HASH=password_hash
-NAMESERVER="8.8.8.8"
-NAMESERVER+="8.8.4.4"
-PKGNG=vim-lite 
-PKGNG+=puppet
-PUPPET=init.pp
+DISTRIBUTIONS=	kernel.txz base.txz
+MIRROR=		ftp.gr.freebsd.org
+SIZE_GB=	3
+SIZE_SWAP=	1
+SIZE_UFS!=	expr $(SIZE_GB) - $(SIZE_SWAP) 
+NET_NAME=	native_network
+MEMORY=		512
+NCPUS=		1
+PASSWORD_HASH=	password_hash
+NAMESERVER=	8.8.8.8
+NAMESERVER+=	8.8.4.4
+PKGNG=		vim-lite 
+PKGNG+=		puppet4
+PUPPET=		init.pp
 
 #these should probably remain as-is
 RAW_IMAGE=FreeBSD-$(BSD_VERSION)-RELEASE-$(BSD_ARCH).raw
@@ -52,9 +52,12 @@ show:
 
 #################################################################################
 
+SYSRC=		sysrc -f /mnt/$(ZPOOL_DIR)etc/rc.conf
+
 COMMON_SETTINGS+=set_hostname
 set_hostname:
-	echo hostname=\"$(HOSTNAME)\" > /mnt/$(ZPOOL_DIR)etc/rc.conf
+	#echo hostname=\"$(HOSTNAME)\" > /mnt/$(ZPOOL_DIR)etc/rc.conf
+	${SYSRC} hostname="$(HOSTNAME)"
 
 .if ! $(IP) == "DHCP"
 IP_RC=inet $(IP)
@@ -63,19 +66,22 @@ IP_RC=$(IP)
 .endif
 COMMON_SETTINGS+=ifconfig
 ifconfig:
-	echo ifconfig_em0=\"$(IP_RC)\" >> /mnt/$(ZPOOL_DIR)etc/rc.conf
+	#echo ifconfig_em0=\"$(IP_RC)\" >> /mnt/$(ZPOOL_DIR)etc/rc.conf
+	${SYSRC} ifconfig_em0="$(IP_RC)"
 
 .if $(IPV6) != "" 
 COMMON_SETTINGS+=ipv6
 .endif
 ipv6:
-	echo ifconfig_em0_ipv6=\"$(IPV6)\" >> /mnt/$(ZPOOL_DIR)etc/rc.conf
+	#echo ifconfig_em0_ipv6=\"$(IPV6)\" >> /mnt/$(ZPOOL_DIR)etc/rc.conf
+	${SYSRC} ifconfig_em0_ipv6="$(IPV6)"
 
 .if (defined(DEFAULTROUTER))
 COMMON_SETTINGS+=defaultrouter
 .endif
 defaultrouter:
-	echo defaultrouter=\"$(DEFAULTROUTER)\" >> /mnt/$(ZPOOL_DIR)etc/rc.conf
+	#echo defaultrouter=\"$(DEFAULTROUTER)\" >> /mnt/$(ZPOOL_DIR)etc/rc.conf
+	${SYSRC} defaultrouter="$(DEFAULTROUTER)"
 
 COMMON_SETTINGS+=cmos
 cmos:
@@ -87,16 +93,21 @@ timezone:
 
 COMMON_SETTINGS+=dumpdev
 dumpdev:
-	echo dumpdev="AUTO" >> /mnt/$(ZPOOL_DIR)etc/rc.conf
+	#echo dumpdev="AUTO" >> /mnt/$(ZPOOL_DIR)etc/rc.conf
+	${SYSRC} dumpdev="AUTO"
 
 COMMON_SETTINGS+=kern_securelevel
 kern_securelevel:
-	echo kern_securelevel_enable="NO" >> /mnt/$(ZPOOL_DIR)etc/rc.conf
-	echo kern_securelevel="1" >> /mnt/$(ZPOOL_DIR)etc/rc.conf
+	#echo kern_securelevel_enable="NO" >> /mnt/$(ZPOOL_DIR)etc/rc.conf
+	#echo kern_securelevel="1" >> /mnt/$(ZPOOL_DIR)etc/rc.conf
+	${SYSRC} kern_securelevel_enable="NO"
+	${SYSRC} kern_securelevel="1"
+
 
 COMMON_SETTINGS+=sshd_enable
 sshd_enable:
-	echo sshd_enable="YES" >> /mnt/$(ZPOOL_DIR)etc/rc.conf
+	#echo sshd_enable="YES" >> /mnt/$(ZPOOL_DIR)etc/rc.conf
+	${SYSRC} sshd_enable="YES"
 
 COMMON_SETTINGS+=set_password
 set_password:
@@ -167,7 +178,8 @@ clean:
 
 
 emptyimage:
-	dd if=/dev/zero of=target.disk bs=1G count=$(SIZE_GB)
+	#dd if=/dev/zero of=target.disk bs=1G count=$(SIZE_GB)
+	truncate -s ${SIZE_GB}G target.disk
 
 metadevice:
 	mdconfig -f target.disk -u$(MD_NUMBER)
@@ -177,7 +189,7 @@ delete_metadevice:
 
 ufs_partition:
 	#newfs -O 2 -U -a 4 -b 32768 -d 32768 -e 4096 -f 4096 -g 16384 -h 64 -i 8192 -j -k 6408 -m 8 -o time /dev/md$(MD_NUMBER)
-	bsdinstall scriptedpart md$(MD_NUMBER) { $(SIZE_UFS)G freebsd-ufs / , auto freebsd-swap }
+	bsdinstall scriptedpart md$(MD_NUMBER) GPT { $(SIZE_UFS)G freebsd-ufs / , auto freebsd-swap }
 
 ufs_mount:
 	mount /dev/md$(MD_NUMBER)p2 /mnt
@@ -186,14 +198,19 @@ ufs_umount:
 	- umount /mnt
 	
 entropy:
+	mkdir /mnt/boot/
 	env BSDINSTALL_CHROOT=/mnt/$(ZPOOL_DIR) bsdinstall entropy
 
 .export DISTRIBUTIONS
-distfetch-bsdinstall:
+create_distdir: $(DISTDIR)
+
+$(DISTDIR):
 	mkdir -p $(DISTDIR)
+	
+distfetch-bsdinstall: create_distdir
 	env BSDINSTALL_DISTDIR=`pwd`/$(DISTDIR) BSDINSTALL_DISTSITE=ftp://$(MIRROR)/pub/FreeBSD/releases/$(BSD_ARCH)/$(BSD_VERSION)-RELEASE bsdinstall distfetch
 
-distfetch-manual: 
+distfetch-manual: create_distdir
 	cd $(DISTDIR) ; for i in $(DISTRIBUTIONS); do fetch -m $(DISTSITE)/$$i ; done
 
 DISTFETCH_METHOD=manual
