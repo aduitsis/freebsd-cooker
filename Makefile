@@ -21,6 +21,7 @@ NAMESERVER+=	8.8.4.4
 PKGNG=		vim-lite 
 PKGNG+=		puppet4
 PUPPET=		init.pp
+NETDEVICE=	vmxnet3
 
 #these should probably remain as-is
 RAW_IMAGE=FreeBSD-$(BSD_VERSION)-RELEASE-$(BSD_ARCH).raw
@@ -59,28 +60,32 @@ set_hostname:
 	#echo hostname=\"$(HOSTNAME)\" > /mnt/$(ZPOOL_DIR)etc/rc.conf
 	${SYSRC} hostname="$(HOSTNAME)"
 
+.if ${NETDEVICE} == "vmxnet3"
+INTERFACE=	vmx0
+.else
+INTERFACE=	em0
+.endif
+
 .if ! $(IP) == "DHCP"
-IP_RC=inet $(IP)
+IP_RC=inet $(IP) netmask $(NETMASK)
 .else
 IP_RC=$(IP)
 .endif
+
 COMMON_SETTINGS+=ifconfig
 ifconfig:
-	#echo ifconfig_em0=\"$(IP_RC)\" >> /mnt/$(ZPOOL_DIR)etc/rc.conf
-	${SYSRC} ifconfig_em0="$(IP_RC)"
+	${SYSRC} ifconfig_${INTERFACE}="$(IP_RC)"
 
 .if $(IPV6) != "" 
 COMMON_SETTINGS+=ipv6
 .endif
 ipv6:
-	#echo ifconfig_em0_ipv6=\"$(IPV6)\" >> /mnt/$(ZPOOL_DIR)etc/rc.conf
-	${SYSRC} ifconfig_em0_ipv6="$(IPV6)"
+	${SYSRC} ifconfig_${INTERFACE}_ipv6="$(IPV6)"
 
 .if (defined(DEFAULTROUTER))
 COMMON_SETTINGS+=defaultrouter
 .endif
 defaultrouter:
-	#echo defaultrouter=\"$(DEFAULTROUTER)\" >> /mnt/$(ZPOOL_DIR)etc/rc.conf
 	${SYSRC} defaultrouter="$(DEFAULTROUTER)"
 
 COMMON_SETTINGS+=cmos
@@ -151,8 +156,12 @@ common_settings: $(COMMON_SETTINGS)
 vmdk-image:
 	vmdktool -v target.vmdk $(RAW_IMAGE)
 
+vmx:
+	cp target.vmx.template target.vmx
+
 vmdk:
-	vmdktool -v target.vmdk target.disk
+	qemu-img convert -f raw target.disk -O vmdk target.vmdk -o compat6
+	### vmdktool -v target.vmdk target.disk
 
 ova:
 	cp template.ovf target.ovf
