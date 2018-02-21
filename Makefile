@@ -21,7 +21,7 @@ NAMESERVER+=	8.8.4.4
 PKGNG=		vim-lite 
 PKGNG+=		puppet4
 PUPPET=		init.pp
-NETDEVICE=	vmxnet3
+NETDEVICE=	e1000
 
 #these should probably remain as-is
 RAW_IMAGE=FreeBSD-$(BSD_VERSION)-RELEASE-$(BSD_ARCH).raw
@@ -153,15 +153,14 @@ common_settings: $(COMMON_SETTINGS)
 
 #################################################################################
 
-vmdk-image:
-	vmdktool -v target.vmdk $(RAW_IMAGE)
 
 vmx:
+	- rm target.vmsd target.vmxf nvram vmware-*.log vmware.log
 	cp target.vmx.template target.vmx
+	chmod a+w target.*
 
 vmdk:
-	qemu-img convert -f raw target.disk -O vmdk target.vmdk -o compat6
-	### vmdktool -v target.vmdk target.disk
+	qemu-img convert -f raw -O vmdk -o adapter_type=lsilogic,subformat=streamOptimized,compat6 target.disk target.vmdk
 
 ova:
 	cp template.ovf target.ovf
